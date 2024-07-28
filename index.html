@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Top Countries by World Development Indicators</title>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .tabs {
+            display: flex;
+            cursor: pointer;
+        }
+        .tab {
+            padding: 10px 20px;
+            background: #f1f1f1;
+            margin-right: 5px;
+        }
+        .tab.active {
+            background: #ccc;
+        }
+        .container {
+            display: flex;
+            align-items: flex-start;
+            margin-top: 20px;
+        }
+        .description {
+            width: 250px;
+            margin-right: 20px;
+        }
+        .chart {
+            position: relative;
+            flex-grow: 1;
+        }
+        .bar {
+            fill: rgb(86, 117, 202);
+        }
+        .bar:hover {
+            fill: rgb(128, 162, 255);
+        }
+        .axis-label {
+            font: 20px sans-serif;
+        }
+        .x-axis path,
+        .x-axis line,
+        .y-axis path,
+        .y-axis line {
+            shape-rendering: crispEdges;
+        }
+        .tooltip {
+            position: absolute;
+            text-align: left;
+            width: auto;
+            height: auto;
+            padding: 5px;
+            font: 12px sans-serif;
+            background:   rgb(128, 162, 255);
+						color: white;
+            border: 0;
+            border-radius: 5px;
+            pointer-events: none;
+            visibility: hidden;
+						box-shadow: 0px 3px 10px 1px rgba(0, 0, 0, 0.279);
+        }
+        .chart-container {
+            display: none;
+        }
+        .chart-container.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <h2>Top Countries by World Development Indicators</h2>
+    <div class="tabs">
+        <div class="tab active" data-tab="tab1">Top 1-50</div>
+        <div class="tab" data-tab="tab2">Top 51-100</div>
+        <div class="tab" data-tab="tab3">Top 101-150</div>
+    </div>
+    <div id="tab1" class="chart-container active">
+        <div class="container">
+            <div class="description">
+                <h3>Top 1-50 Countries</h3>
+                <p>This chart displays the top 1-50 countries based on their latest available World Development Indicators. The Data is collected from World Bank Group: https://databank.worldbank.org/reports.aspx?source=2&series=FP.CPI.TOTL.ZG&country=#</p>
+                <p>Click the bars to see the exact value of World Development Indicators and the year it corresponds to.</p>
+            </div>
+            <div class="chart">
+                <svg width="1200" height="1000"></svg>
+                <div class="tooltip" id="tooltip1"></div>
+            </div>
+        </div>
+    </div>
+    <div id="tab2" class="chart-container">
+        <div class="container">
+            <div class="description">
+                <h3>Top 51-100 Countries</h3>
+                <p>This chart displays the top 51-100 countries based on their latest available World Development Indicators. The Data is collected from World Bank Group: https://databank.worldbank.org/reports.aspx?source=2&series=FP.CPI.TOTL.ZG&country=#</p>
+                <p>Click the bars to see the exact value of World Development Indicators and the year it corresponds to.</p>
+            </div>
+            <div class="chart">
+                <svg width="1200" height="1000"></svg>
+                <div class="tooltip" id="tooltip2"></div>
+            </div>
+        </div>
+    </div>
+    <div id="tab3" class="chart-container">
+        <div class="container">
+            <div class="description">
+							<h3>Top 101-150 Countries</h3>
+							<p>This chart displays the top 101-150 countries based on their latest available World Development Indicators. The Data is collected from World Bank Group: https://databank.worldbank.org/reports.aspx?source=2&series=FP.CPI.TOTL.ZG&country=#</p>
+							<p>Click the bars to see the exact value of World Development Indicators and the year it corresponds to.</p>
+            </div>
+            <div class="chart">
+                <svg width="1200" height="1000"></svg>
+                <div class="tooltip" id="tooltip3"></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Function to create a bar chart
+        function createBarChart(container, tooltipId, dataRange) {
+            // Load data from CSV file
+            d3.csv("target_meta_ranked.csv").then(data => {
+                // Convert strings to numbers
+                data.forEach(d => {
+                    d.latest_value = +d.latest_value;
+                    d.rank = +d.rank;
+                    d.latest_year = +d.latest_year;
+                });
+
+                // Filter data for the given range
+                let topData = data.slice(dataRange[0], dataRange[1]);
+
+                // Set dimensions and margins
+                const margin = {top: 20, right: 30, bottom: 40, left: 150},
+                    width = 1200 - margin.left - margin.right,
+                    height = 1000 - margin.top - margin.bottom;
+
+                // Create SVG container
+                const svg = d3.select(container).select("svg")
+                    .attr("width", width + margin.left + margin.right)
+                    .attr("height", height + margin.top + margin.bottom)
+                    .append("g")
+                    .attr("transform", `translate(${margin.left},${margin.top})`);
+
+                // X axis scale
+                const x = d3.scaleLinear()
+                    .domain([0, d3.max(topData, d => d.latest_value)])
+                    .range([0, width]);
+
+                // Y axis scale
+                const y = d3.scaleBand()
+                    .domain(topData.map(d => d.country_name))
+                    .range([0, height])
+                    .padding(0.1);
+
+                // Add X axis
+                svg.append("g")
+                    .attr("class", "x-axis")
+                    .attr("transform", `translate(0,${height})`)
+                    .call(d3.axisBottom(x).ticks(10))
+                    .append("text")
+                    .attr("class", "axis-label")
+                    .attr("x", width)
+                    .attr("y", -6)
+                    .attr("text-anchor", "end")
+                    .text("Latest Value");
+
+                // Add Y axis
+                svg.append("g")
+                    .attr("class", "y-axis")
+                    .call(d3.axisLeft(y))
+                    .append("text")
+                    .attr("class", "axis-label")
+                    .attr("x", 6)
+                    .attr("dy", "0.75em")
+                    .attr("text-anchor", "start")
+                    .text("Country");
+
+                // Tooltip element
+                const tooltip = d3.select(tooltipId);
+
+                // Add bars
+                svg.selectAll(".bar")
+                    .data(topData)
+                    .enter()
+                    .append("rect")
+                    .attr("class", "bar")
+                    .attr("x", 0)
+                    .attr("y", d => y(d.country_name))
+                    .attr("width", d => x(d.latest_value))
+                    .attr("height", y.bandwidth())
+                    .on("click", (event, d) => {
+                        tooltip.style("visibility", "visible")
+                               .html(`Country: ${d.country_name}<br>Rank: ${d.rank}<br>Latest Value: ${d.latest_value}<br>Year: ${d.latest_year}`)
+                               .style("top", `${event.clientY - 100}px`)
+                               .style("left", `${event.clientX - 800}px`);
+                    })
+                    .on("mouseout", () => {
+                        tooltip.style("visibility", "hidden");
+                    })
+                    .append("title")
+                    .text(d => `${d.country_name}: ${d.latest_value} (${d.latest_year})`);
+            });
+        }
+
+        // Create charts for each tab
+        createBarChart("#tab1 .chart", "#tooltip1", [0, 50]);
+        createBarChart("#tab2 .chart", "#tooltip2", [50, 100]);
+        createBarChart("#tab3 .chart", "#tooltip3", [100, 150]);
+
+        // Tab switching logic
+        document.querySelectorAll(".tab").forEach(tab => {
+            tab.addEventListener("click", () => {
+                document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+                tab.classList.add("active");
+
+                document.querySelectorAll(".chart-container").forEach(container => container.classList.remove("active"));
+                document.getElementById(tab.getAttribute("data-tab")).classList.add("active");
+            });
+        });
+    </script>
+</body>
+</html>
