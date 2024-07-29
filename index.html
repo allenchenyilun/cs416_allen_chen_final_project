@@ -122,44 +122,35 @@
         </div>
     </div>
     <script>
-        // Function to create a bar chart
         function createBarChart(container, tooltipId, dataRange) {
-            // Load data from CSV file
             d3.csv("target_meta_ranked.csv").then(data => {
-                // Convert strings to numbers
                 data.forEach(d => {
                     d.latest_value = +d.latest_value;
                     d.rank = +d.rank;
                     d.latest_year = +d.latest_year;
                 });
 
-                // Filter data for the given range
                 let topData = data.slice(dataRange[0], dataRange[1]);
 
-                // Set dimensions and margins
                 const margin = {top: 20, right: 30, bottom: 40, left: 150},
                     width = 1200 - margin.left - margin.right,
                     height = 1000 - margin.top - margin.bottom;
 
-                // Create SVG container
                 const svg = d3.select(container).select("svg")
                     .attr("width", width + margin.left + margin.right)
                     .attr("height", height + margin.top + margin.bottom)
                     .append("g")
                     .attr("transform", `translate(${margin.left},${margin.top})`);
 
-                // X axis scale
                 const x = d3.scaleLinear()
                     .domain([0, d3.max(topData, d => d.latest_value)])
                     .range([0, width]);
 
-                // Y axis scale
                 const y = d3.scaleBand()
                     .domain(topData.map(d => d.country_name))
                     .range([0, height])
                     .padding(0.1);
 
-                // Add X axis
                 svg.append("g")
                     .attr("class", "x-axis")
                     .attr("transform", `translate(0,${height})`)
@@ -171,7 +162,6 @@
                     .attr("text-anchor", "end")
                     .text("Latest Value");
 
-                // Add Y axis
                 svg.append("g")
                     .attr("class", "y-axis")
                     .call(d3.axisLeft(y))
@@ -182,10 +172,8 @@
                     .attr("text-anchor", "start")
                     .text("Country");
 
-                // Tooltip element
                 const tooltip = d3.select(tooltipId);
 
-                // Add bars
                 svg.selectAll(".bar")
                     .data(topData)
                     .enter()
@@ -209,12 +197,10 @@
             });
         }
 
-        // Create charts for each tab
         createBarChart("#tab1 .chart", "#tooltip1", [0, 50]);
         createBarChart("#tab2 .chart", "#tooltip2", [50, 100]);
         createBarChart("#tab3 .chart", "#tooltip3", [100, 150]);
 
-        // Tab switching logic
         document.querySelectorAll(".tab").forEach(tab => {
             tab.addEventListener("click", () => {
                 document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
